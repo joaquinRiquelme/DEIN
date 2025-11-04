@@ -38,7 +38,14 @@ anchos_aristas <- ifelse(E(graph.adj)$weight!=0,2,0)# * 2  # Multiplicamos por 2
 
 # Opciones de diseño del grafo
 layout_grafo <- layout_with_fr(graph.abs)
+layout_grafo <- layout_with_kk(graph.abs)
+layout_grafo <- layout_with_lgl(graph.abs)
 
+
+layout_as_tree<- layout_with_lgl(graph.abs)
+layout_in_circle<- layout_with_lgl(graph.abs)
+layout_as_star<- layout_with_lgl(graph.abs)
+layout_nicely<- layout_with_lgl(graph.abs)
 # Plotear el grafo con las opciones personalizadas
 plot(graph.adj,
      vertex.color = "lightgreen",        # Color de los nodos
@@ -49,7 +56,13 @@ plot(graph.adj,
      edge.width = anchos_aristas,        # Ancho de las aristas
      edge.arrow.size = 0.5,              # Tamaño de las puntas de flecha
      edge.curved = 0.2,                  # Curvatura de las aristas para evitar superposición
-     layout = layout_grafo               # El diseño del grafo
+     # layout = layout_with_fr#
+     # layout = layout_in_circle
+     # layout =layout_with_lgl
+     layout = layout_as_star
+     # layout = layout_with_lgl
+     # layout = layout_nicely
+     # layout = layout_grafo               # El diseño del grafo
 )
 
 # Agregar una leyenda para los colores de las aristas
@@ -61,6 +74,8 @@ legend("topright",
 
 ## Calcular las variables de centralidad de cada variable ----
 centralidad_grado <- degree(graph.abs)
+centralidad_grado_out <- degree(graph.abs, mode="out")
+centralidad_grado_in <- degree(graph.abs, mode="in")
 
 cercania_centralidad <- closeness(graph.abs)
 
@@ -69,21 +84,46 @@ intermediacion_centralidad <- betweenness(graph.abs)
 centralidad_propia <- eigen(m.adj)$values
 
 V(graph.abs)$grado <- centralidad_grado
+V(graph.abs)$grado_in <- centralidad_grado_in
+V(graph.abs)$grado_out <- centralidad_grado_out
 V(graph.abs)$cercania <- cercania_centralidad
 V(graph.abs)$intermediacion <- intermediacion_centralidad
 V(graph.abs)$centralidad_propia <- centralidad_propia
 
-plot(graph.abs, vertex.size = V(graph.abs)$grado * 5, vertex.label = 1:vcount(graph.abs))
+par(mfrow=c(1,3))
+
+plot(graph.abs, 
+     vertex.size = V(graph.abs)$grado * 5, 
+     vertex.label = 1:vcount(graph.abs),
+     main = "Grado total",
+     layout=layout_as_star)
+     # layout=layout_in_circle)
+
+
+plot(graph.abs, 
+     vertex.size = V(graph.abs)$grado_in*5, 
+     vertex.label = 1:vcount(graph.abs), 
+     main="Grado in",
+     layout=layout_as_star)
+
+plot(graph.abs, 
+     vertex.size = V(graph.abs)$grado_out*5, 
+     vertex.label = 1:vcount(graph.abs), 
+     main="Grado out",
+     layout = layout_in_circle)
+
 plot(graph.abs, vertex.size = V(graph.abs)$cercania * 5, vertex.label = 1:vcount(graph.abs))
 plot(graph.abs, vertex.size = V(graph.abs)$intermediacion * 2, vertex.label = 1:vcount(graph.abs))
-plot(graph.abs, vertex.size = V(graph.abs)$centralidad_propia, vertex.label = 1:vcount(graph.abs))
 
-# La centralidad que calcule es para grafos dirigidos			
 
-#Identificar Feedback		
+# inversa de la matriz
+diag.m.adj <- m.adj + diag(x = -1.5, nrow = 16)
+eigen.values <- eigen(diag.m.adj)$values
+eigen.values.r <- Re(eigen.values)
+eigen.vectors <- eigen(diag.m.adj)$vectors
 
-#Elevar la matriz a potencia		
+inver <- solve(-diag.m.adj)
 
-#Calcular autovalores (leer capitulo) de una matriz y 
-
-#calcular la inversa de una matriz
+inver %*% diag.m.adj - diag(1,16)
+barplot(inver[1,])
+barplot(inver[,3])
